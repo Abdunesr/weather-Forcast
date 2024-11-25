@@ -34,13 +34,14 @@ function formatDay(dateStr) {
 
 class App extends React.Component {
   state = {
-    location: "lisbon",
+    location: "",
     isLoading: false,
     weather: {},
     displayLocation: "",
   };
 
   FetchWeather = async () => {
+    if (this.state.location.length < 2) return this.setState({ weather: {} });
     try {
       this.setState({ isLoading: true });
       // 1) Getting location (geocoding)
@@ -70,20 +71,26 @@ class App extends React.Component {
       this.setState({ isLoading: false });
     }
   };
-
+  handleOnchange = (e) => this.setState({ location: e.target.value });
+  componentDidMount() {
+    /*  this.FetchWeather(); */
+    this.setState({ location: localStorage.getItem("location") });
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.location !== prevState.location) {
+      this.FetchWeather();
+    }
+    localStorage.setItem("location", this.state.location);
+  }
   render() {
     return (
       <div className="app">
         <h1>classy Weather </h1>
-        <div>
-          <input
-            type="text"
-            placeholder="location search ..."
-            value={this.state.location}
-            onChange={(e) => this.setState({ location: e.target.value })}
-          />
-        </div>
-        <button onClick={this.FetchWeather}>Get Weather</button>
+        <Input
+          location={this.state.location}
+          handleOnchanges={this.handleOnchange}
+        />
+
         <div>{this.state.isLoading && <h1>...Loading</h1>}</div>
         {this.state.weather.weathercode && (
           <Weather
@@ -95,7 +102,24 @@ class App extends React.Component {
     );
   }
 }
+class Input extends React.Component {
+  render() {
+    return (
+      <div>
+        <input
+          type="text"
+          placeholder="location search ..."
+          value={this.props.location}
+          onChange={this.props.handleOnchanges}
+        />
+      </div>
+    );
+  }
+}
 class Weather extends React.Component {
+  componentWillUnmount() {
+    console.log("the componets is unmounting ");
+  }
   render() {
     console.log(this.props);
     const {
